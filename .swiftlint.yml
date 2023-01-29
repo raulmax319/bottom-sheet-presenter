@@ -1,0 +1,13 @@
+force_cast: error
+force_try: error
+
+excluded:
+  - Carthage
+  - Pods
+
+line_length:
+  warning: 90
+  error: 120
+
+identifier_name:
+  min_length: 1
