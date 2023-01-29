@@ -1,5 +1,5 @@
 PODS:
-  - BottomSheetPresenter (0.1.0)
+  - BottomSheetPresenter/Debug (0.1.0)
   - FBSnapshotTestCase (2.1.4):
     - FBSnapshotTestCase/SwiftSupport (= 2.1.4)
   - FBSnapshotTestCase/Core (2.1.4)
@@ -19,7 +19,7 @@ PODS:
   - Quick (2.2.1)
 
 DEPENDENCIES:
-  - BottomSheetPresenter (from `../`)
+  - BottomSheetPresenter/Debug (from `../`)
   - FBSnapshotTestCase (~> 2.1.4)
   - Nimble (~> 10.0.0)
   - Nimble-Snapshots (~> 9.4.0)
@@ -38,13 +38,13 @@ EXTERNAL SOURCES:
     :path: "../"
 
 SPEC CHECKSUMS:
-  BottomSheetPresenter: 6075d67c4b39e58dd7f92324f2807c473bb6a733
+  BottomSheetPresenter: ac4ad8107bd63872db65065f643a3e23dab77082
   FBSnapshotTestCase: 094f9f314decbabe373b87cc339bea235a63e07a
   iOSSnapshotTestCase: a670511f9ee3829c2b9c23e6e68f315fd7b6790f
   Nimble: 5316ef81a170ce87baf72dd961f22f89a602ff84
   Nimble-Snapshots: ef281b908c604f78c8313587e25ea92c8ab513d7
   Quick: f5754d69b7013f5864c29aab9ae6f0c79c5bc200
 
-PODFILE CHECKSUM: 95e58235b09c11b190ee717d3a78a17addd93c3e
+PODFILE CHECKSUM: 3626c23bf631be197511c35440f2f045e2ce6710
 
 COCOAPODS: 1.11.3
