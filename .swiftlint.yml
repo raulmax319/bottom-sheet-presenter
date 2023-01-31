@@ -1,12 +1,15 @@
 force_cast: error
 force_try: error
 
+# disabled temporarily
+# included:
+# - BottomSheetPresenter/Lib
+
 excluded:
   - Carthage
-  - Pods
 
 line_length:
-  warning: 90
+  warning: 110
   error: 120
 
 identifier_name:

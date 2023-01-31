@@ -174,6 +174,7 @@
 				607FACCD1AFB9204008FA782 /* Frameworks */,
 				607FACCE1AFB9204008FA782 /* Resources */,
 				C8854F03E6616C4CDE674B9F /* [CP] Embed Pods Frameworks */,
+				F1B4EF7B2988B0BF00D364AF /* Integrate SwiftLint */,
 			);
 			buildRules = (
 			);
@@ -352,6 +353,24 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BottomSheetPresenter_Example/Pods-BottomSheetPresenter_Example-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		F1B4EF7B2988B0BF00D364AF /* Integrate SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Integrate SwiftLint";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if uname -m | grep -q '^arm'; then\n  export PATH=\"$PATH:/opt/homebrew/bin\"\nfi\nif which swiftlint >/dev/null; then\n  swiftlint\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

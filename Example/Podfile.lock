@@ -17,6 +17,7 @@ PODS:
     - iOSSnapshotTestCase (~> 8.0)
     - Nimble
   - Quick (2.2.1)
+  - SwiftLint (0.47.1)
 
 DEPENDENCIES:
   - BottomSheetPresenter/Debug (from `../`)
@@ -24,6 +25,7 @@ DEPENDENCIES:
   - Nimble (~> 10.0.0)
   - Nimble-Snapshots (~> 9.4.0)
   - Quick (~> 2.2.0)
+  - SwiftLint
 
 SPEC REPOS:
   trunk:
@@ -32,6 +34,7 @@ SPEC REPOS:
     - Nimble
     - Nimble-Snapshots
     - Quick
+    - SwiftLint
 
 EXTERNAL SOURCES:
   BottomSheetPresenter:
@@ -44,7 +47,8 @@ SPEC CHECKSUMS:
   Nimble: 5316ef81a170ce87baf72dd961f22f89a602ff84
   Nimble-Snapshots: ef281b908c604f78c8313587e25ea92c8ab513d7
   Quick: f5754d69b7013f5864c29aab9ae6f0c79c5bc200
+  SwiftLint: f80f1be7fa96d30e0aa68e58d45d4ea1ccaac519
 
-PODFILE CHECKSUM: 3626c23bf631be197511c35440f2f045e2ce6710
+PODFILE CHECKSUM: 6d355db6466f628d88183c6578827208b32894f6
 
 COCOAPODS: 1.11.3

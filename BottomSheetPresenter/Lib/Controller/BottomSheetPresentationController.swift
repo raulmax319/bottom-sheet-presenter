@@ -13,21 +13,10 @@ final public class BottomSheetPresentationController: UIPresentationController {
     case top
     case middle
     case bottom
-
-    func setYCenter(for containerView: UIView, with height: CGFloat) -> CGFloat {
-      switch self {
-      case .top:
-        return .zero
-      case .middle:
-        return .zero
-      case .bottom:
-        return .zero
-      }
-    }
   }
 
   private var initialPosition: CGPoint = .zero
-  private var presentediViewPosition: PresentationPosition = .top
+  private var presentediViewPosition: PresentationPosition = .bottom
 
   private lazy var backdropView: BackdropView = {
     return BackdropView()
@@ -90,7 +79,7 @@ extension BottomSheetPresentationController {
   }
 
   @objc private func handleTapGesture(_ gesture: UITapGestureRecognizer) {
-    presentedViewController.dismiss(animated: true, completion: nil)
+    presentedViewController.dismiss(animated: true)
   }
 
   @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
@@ -98,12 +87,11 @@ extension BottomSheetPresentationController {
       return
     }
 
-    let percentThreshold = 0.3
+    let percentThreshold = 0.2
     let translation = gesture.translation(in: containerView)
 
     let verticalMovement = translation.y / (containerView.bounds.height - containerView.safeAreaInsets.top)
-    let downwardMovement = fmaxf(Float(verticalMovement), 0.0)
-    let movementPercent = fminf(downwardMovement, 1.0)
+    let movementPercent = fminf(Float(verticalMovement), 1.0)
 
     let progress = CGFloat(movementPercent)
 
@@ -111,7 +99,6 @@ extension BottomSheetPresentationController {
     case .began:
       initialPosition = presentedView.center
     case .changed:
-
       switch presentediViewPosition {
       case .top:
         guard translation.y > 0 else {
@@ -128,28 +115,26 @@ extension BottomSheetPresentationController {
           y: initialPosition.y + translation.y
         )
       case .bottom:
-        guard translation.y < 0 else {
-          return
-        }
-
         presentedView.center = CGPoint(
           x: initialPosition.x,
           y: initialPosition.y + translation.y
         )
       }
     case .ended,
-         .cancelled:
+        .cancelled:
       switch presentediViewPosition {
       case .top:
-        if progress > percentThreshold {
+        if progress >= percentThreshold {
           UIView.animate(
             withDuration: 0.5,
             delay: 0.0,
             usingSpringWithDamping: 0.7,
             initialSpringVelocity: 0.7,
             animations: {
-              let center = containerView.center
-              presentedView.center = CGPoint(x: center.x, y: center.y + self.initialPosition.y)
+              let oldFrame = presentedView.frame
+              let containerFrame = containerView.frame
+              let newY = containerView.bounds.height - containerView.bounds.height * 0.6
+              presentedView.frame = CGRect(origin: CGPoint(x: containerFrame.left, y: newY), size: oldFrame.size)
             }) { [unowned self] success in
               presentediViewPosition = .middle
             }
@@ -165,9 +150,73 @@ extension BottomSheetPresentationController {
           )
         }
       case .middle:
-        break
+        if progress < 0, abs(progress) >= percentThreshold {
+          UIView.animate(
+            withDuration: 0.5,
+            delay: 0.0,
+            usingSpringWithDamping: 0.7,
+            initialSpringVelocity: 0.7,
+            animations: {
+              let oldFrame = presentedView.frame
+              let containerFrame = containerView.frame
+              let newY = containerView.safeAreaInsets.top
+              presentedView.frame = CGRect(origin: CGPoint(x: containerFrame.left, y: newY), size: oldFrame.size)
+            }) { [unowned self] success in
+              presentediViewPosition = .top
+            }
+        } else if progress > 0, progress >= percentThreshold {
+          UIView.animate(
+            withDuration: 0.5,
+            delay: 0.0,
+            usingSpringWithDamping: 0.7,
+            initialSpringVelocity: 0.7,
+            animations: {
+              let oldFrame = presentedView.frame
+              let containerFrame = containerView.frame
+              let newY = containerView.bounds.height - containerView.bounds.height * 0.3
+              presentedView.frame = CGRect(origin: CGPoint(x: containerFrame.left, y: newY), size: oldFrame.size)
+            }) { [unowned self] success in
+              presentediViewPosition = .bottom
+            }
+        } else {
+          UIView.animate(
+            withDuration: 0.5,
+            delay: 0.0,
+            usingSpringWithDamping: 0.7,
+            initialSpringVelocity: 0.7,
+            animations: {
+              presentedView.center = self.initialPosition
+            }
+          )
+        }
       case .bottom:
-        break
+        if progress < 0, abs(progress) >= percentThreshold {
+          UIView.animate(
+            withDuration: 0.5,
+            delay: 0.0,
+            usingSpringWithDamping: 0.7,
+            initialSpringVelocity: 0.7,
+            animations: {
+              let oldFrame = presentedView.frame
+              let containerFrame = containerView.frame
+              let newY = containerView.bounds.height - containerView.bounds.height * 0.6
+              presentedView.frame = CGRect(origin: CGPoint(x: containerFrame.left, y: newY), size: oldFrame.size)
+            }) { [unowned self] success in
+              presentediViewPosition = .middle
+            }
+        } else if progress > 0, progress >= percentThreshold {
+          presentedViewController.dismiss(animated: true)
+        } else {
+          UIView.animate(
+            withDuration: 0.5,
+            delay: 0.0,
+            usingSpringWithDamping: 0.7,
+            initialSpringVelocity: 0.7,
+            animations: {
+              presentedView.center = self.initialPosition
+            }
+          )
+        }
       }
     default:
       break
@@ -177,7 +226,7 @@ extension BottomSheetPresentationController {
 
 // MARK: - PresentationTransition
 extension BottomSheetPresentationController {
-    public override func presentationTransitionWillBegin() {
+  public override func presentationTransitionWillBegin() {
     backdropView.alpha = 0.0
     containerView?.addSubview(backdropView)
 
@@ -189,7 +238,7 @@ extension BottomSheetPresentationController {
     )
   }
 
-    public override func dismissalTransitionWillBegin() {
+  public override func dismissalTransitionWillBegin() {
     presentedViewController.transitionCoordinator?.animate(
       alongsideTransition: { [unowned self] _ in
         self.backdropView.alpha = 0.0
@@ -201,16 +250,16 @@ extension BottomSheetPresentationController {
 
 // MARK: - ContainerViewLayout
 extension BottomSheetPresentationController {
-    public override func containerViewWillLayoutSubviews() {
+  public override func containerViewWillLayoutSubviews() {
     super.containerViewWillLayoutSubviews()
 
-      presentedView?.roundCorners(
-        [.topLeft, .topRight, .bottomLeft, .bottomRight],
-        radius: 15
-      )
+    presentedView?.roundCorners(
+      [.topLeft, .topRight],
+      radius: 15
+    )
   }
 
-    public override func containerViewDidLayoutSubviews() {
+  public override func containerViewDidLayoutSubviews() {
     super.containerViewDidLayoutSubviews()
 
     presentedView?.frame = frameOfPresentedViewInContainerView

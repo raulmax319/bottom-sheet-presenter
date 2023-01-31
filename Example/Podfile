@@ -3,6 +3,7 @@ use_frameworks!
 platform :ios, '13.0'
 
 target 'BottomSheetPresenter_Example' do
+  pod 'SwiftLint'
   pod 'BottomSheetPresenter/Debug', :path => '../'
 
   target 'BottomSheetPresenter_Tests' do
