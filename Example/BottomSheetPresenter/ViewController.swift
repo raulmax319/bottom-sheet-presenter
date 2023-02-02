@@ -15,7 +15,6 @@ class ViewController: UIViewController {
     let button = UIButton()
     button.translatesAutoresizingMaskIntoConstraints = false
     button.setTitle("Show Modal", for: .normal)
-    button.layer.cornerRadius = 8
 
     return button
   }()
