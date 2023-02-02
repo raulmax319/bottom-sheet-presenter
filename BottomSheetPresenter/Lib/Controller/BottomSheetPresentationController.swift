@@ -15,7 +15,8 @@ final public class BottomSheetPresentationController: UIPresentationController {
     case bottom
   }
 
-  private var initialPosition: CGPoint = .zero
+  private var initialPosition: CGRect = .zero
+  private var percentThreshold: CGFloat = 0.15
   private var presentediViewPosition: PresentationPosition = .bottom
 
   private lazy var backdropView: BackdropView = {
@@ -41,11 +42,11 @@ final public class BottomSheetPresentationController: UIPresentationController {
 
     switch presentediViewPosition {
     case .top:
-      y = containerView.safeAreaInsets.top
+      y = height - (height * 0.9)
     case .middle:
-      y = containerView.bounds.height - height * 0.6
+      y = height - (height * 0.6)
     case .bottom:
-      y = containerView.bounds.height - height * 0.3
+      y = height - (height * 0.3)
     }
 
     return CGRect(x: 0, y: y, width: width, height: height)
@@ -82,12 +83,121 @@ extension BottomSheetPresentationController {
     presentedViewController.dismiss(animated: true)
   }
 
+  private func beginAnimation(
+    in presentedView: UIView,
+    at position: PresentationPosition,
+    with yOffset: CGFloat
+  ) {
+    guard let containerView else {
+      return
+    }
+
+    UIView.animate(
+      withDuration: 0.5,
+      delay: 0.0,
+      usingSpringWithDamping: 0.7,
+      initialSpringVelocity: 0.7,
+      animations: {
+        let oldFrame = presentedView.frame
+        let containerFrame = containerView.frame
+        let newY = containerView.bounds.height - containerView.bounds.height * yOffset
+        presentedView.frame = CGRect(origin: CGPoint(x: containerFrame.left, y: newY), size: oldFrame.size)
+      }) { [unowned self] success in
+        presentediViewPosition = position
+      }
+  }
+
+  private func resetPosition(in view: UIView) {
+    UIView.animate(
+      withDuration: 0.5,
+      delay: 0.0,
+      usingSpringWithDamping: 0.7,
+      initialSpringVelocity: 0.7,
+      animations: {
+        view.frame = self.initialPosition
+      }
+    )
+  }
+
+  private func updatePosition(at origin: CGPoint) {
+    guard let presentedView else {
+      return
+    }
+
+    let oldFrame = presentedView.frame
+    presentedView.frame = CGRect(origin: origin, size: oldFrame.size)
+  }
+
+  private func endMovement(with progress: CGFloat) {
+    guard let presentedView else {
+      return
+    }
+
+    switch presentediViewPosition {
+    case .top:
+      if progress >= percentThreshold {
+        beginAnimation(
+          in: presentedView,
+          at: .middle,
+          with: 0.6
+        )
+      } else {
+        resetPosition(in: presentedView)
+      }
+    case .middle:
+      if progress < 0, abs(progress) >= percentThreshold {
+        beginAnimation(
+          in: presentedView,
+          at: .top,
+          with: 0.9
+        )
+      } else if progress > 0, progress >= percentThreshold {
+        beginAnimation(
+          in: presentedView,
+          at: .bottom,
+          with: 0.3
+        )
+      } else {
+        resetPosition(in: presentedView)
+      }
+    case .bottom:
+      if progress < 0, abs(progress) >= percentThreshold {
+        beginAnimation(
+          in: presentedView,
+          at: .middle,
+          with: 0.6
+        )
+      } else if progress > 0, progress >= percentThreshold {
+        presentedViewController.dismiss(animated: true)
+      } else {
+        resetPosition(in: presentedView)
+      }
+    }
+  }
+
+  private func moveView(with translation: CGPoint) {
+    switch presentediViewPosition {
+    case .top:
+      guard translation.y > 0 else {
+        return
+      }
+
+      let origin = CGPoint(x: initialPosition.left, y: initialPosition.top + translation.y)
+      updatePosition(at: origin)
+    case .middle:
+      let origin = CGPoint(x: initialPosition.left, y: initialPosition.top + translation.y)
+      updatePosition(at: origin)
+    case .bottom:
+      let origin = CGPoint(x: initialPosition.left, y: initialPosition.top + translation.y)
+      updatePosition(at: origin)
+    }
+  }
+
   @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
     guard let presentedView, let containerView else {
       return
     }
 
-    let percentThreshold = 0.2
     let translation = gesture.translation(in: containerView)
 
     let verticalMovement = translation.y / (containerView.bounds.height - containerView.safeAreaInsets.top)
@@ -97,127 +207,12 @@ extension BottomSheetPresentationController {
 
     switch gesture.state {
     case .began:
-      initialPosition = presentedView.center
+      initialPosition = presentedView.frame
     case .changed:
-      switch presentediViewPosition {
-      case .top:
-        guard translation.y > 0 else {
-          return
-        }
-
-        presentedView.center = CGPoint(
-          x: initialPosition.x,
-          y: initialPosition.y + translation.y
-        )
-      case .middle:
-        presentedView.center = CGPoint(
-          x: initialPosition.x,
-          y: initialPosition.y + translation.y
-        )
-      case .bottom:
-        presentedView.center = CGPoint(
-          x: initialPosition.x,
-          y: initialPosition.y + translation.y
-        )
-      }
+      moveView(with: translation)
     case .ended,
         .cancelled:
-      switch presentediViewPosition {
-      case .top:
-        if progress >= percentThreshold {
-          UIView.animate(
-            withDuration: 0.5,
-            delay: 0.0,
-            usingSpringWithDamping: 0.7,
-            initialSpringVelocity: 0.7,
-            animations: {
-              let oldFrame = presentedView.frame
-              let containerFrame = containerView.frame
-              let newY = containerView.bounds.height - containerView.bounds.height * 0.6
-              presentedView.frame = CGRect(origin: CGPoint(x: containerFrame.left, y: newY), size: oldFrame.size)
-            }) { [unowned self] success in
-              presentediViewPosition = .middle
-            }
-        } else {
-          UIView.animate(
-            withDuration: 0.5,
-            delay: 0.0,
-            usingSpringWithDamping: 0.7,
-            initialSpringVelocity: 0.7,
-            animations: {
-              presentedView.center = self.initialPosition
-            }
-          )
-        }
-      case .middle:
-        if progress < 0, abs(progress) >= percentThreshold {
-          UIView.animate(
-            withDuration: 0.5,
-            delay: 0.0,
-            usingSpringWithDamping: 0.7,
-            initialSpringVelocity: 0.7,
-            animations: {
-              let oldFrame = presentedView.frame
-              let containerFrame = containerView.frame
-              let newY = containerView.safeAreaInsets.top
-              presentedView.frame = CGRect(origin: CGPoint(x: containerFrame.left, y: newY), size: oldFrame.size)
-            }) { [unowned self] success in
-              presentediViewPosition = .top
-            }
-        } else if progress > 0, progress >= percentThreshold {
-          UIView.animate(
-            withDuration: 0.5,
-            delay: 0.0,
-            usingSpringWithDamping: 0.7,
-            initialSpringVelocity: 0.7,
-            animations: {
-              let oldFrame = presentedView.frame
-              let containerFrame = containerView.frame
-              let newY = containerView.bounds.height - containerView.bounds.height * 0.3
-              presentedView.frame = CGRect(origin: CGPoint(x: containerFrame.left, y: newY), size: oldFrame.size)
-            }) { [unowned self] success in
-              presentediViewPosition = .bottom
-            }
-        } else {
-          UIView.animate(
-            withDuration: 0.5,
-            delay: 0.0,
-            usingSpringWithDamping: 0.7,
-            initialSpringVelocity: 0.7,
-            animations: {
-              presentedView.center = self.initialPosition
-            }
-          )
-        }
-      case .bottom:
-        if progress < 0, abs(progress) >= percentThreshold {
-          UIView.animate(
-            withDuration: 0.5,
-            delay: 0.0,
-            usingSpringWithDamping: 0.7,
-            initialSpringVelocity: 0.7,
-            animations: {
-              let oldFrame = presentedView.frame
-              let containerFrame = containerView.frame
-              let newY = containerView.bounds.height - containerView.bounds.height * 0.6
-              presentedView.frame = CGRect(origin: CGPoint(x: containerFrame.left, y: newY), size: oldFrame.size)
-            }) { [unowned self] success in
-              presentediViewPosition = .middle
-            }
-        } else if progress > 0, progress >= percentThreshold {
-          presentedViewController.dismiss(animated: true)
-        } else {
-          UIView.animate(
-            withDuration: 0.5,
-            delay: 0.0,
-            usingSpringWithDamping: 0.7,
-            initialSpringVelocity: 0.7,
-            animations: {
-              presentedView.center = self.initialPosition
-            }
-          )
-        }
-      }
+      endMovement(with: progress)
     default:
       break
     }
